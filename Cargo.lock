@@ -278,6 +278,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "backoff"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b62ddb9cb1ec0a098ad4bbf9344d0713fa193ae1a80af55febcff2627b6a00c1"
+dependencies = [
+ "getrandom",
+ "instant",
+ "rand",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -875,16 +886,6 @@ dependencies = [
  "darling_core",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "dashmap"
-version = "4.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e77a43b28d0668df09411cb0bc9a8c2adc40f9a048afe863e05fd43251e8e39c"
-dependencies = [
- "cfg-if",
- "num_cpus",
 ]
 
 [[package]]
@@ -1692,6 +1693,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-range-header"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bfe8eed0a9285ef776bb792479ea3834e8b94e13d615c2f66d03dd50a435a29"
+
+[[package]]
 name = "httparse"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2157,7 +2164,7 @@ dependencies = [
  "dotenv",
  "futures",
  "glob",
- "k8s-openapi",
+ "k8s-openapi 0.13.1",
  "kube",
  "kube-derive",
  "kube-runtime",
@@ -2303,14 +2310,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "k8s-openapi"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0489fc937cc7616a9abfa61bf39c250d7e32e1325ef028c8d9278dd24ea395b3"
+dependencies = [
+ "base64 0.13.0",
+ "bytes",
+ "chrono",
+ "serde",
+ "serde-value",
+ "serde_json",
+]
+
+[[package]]
 name = "kube"
 version = "0.64.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84dcc2f8ca3f2427a72acc31fa9538159f6b33a97002e315a3fcd5323cf51a2b"
 dependencies = [
- "k8s-openapi",
- "kube-client",
- "kube-core",
+ "k8s-openapi 0.13.1",
+ "kube-client 0.64.0",
+ "kube-core 0.64.0",
 ]
 
 [[package]]
@@ -2331,8 +2352,8 @@ dependencies = [
  "hyper-timeout",
  "hyper-tls",
  "jsonpath_lib",
- "k8s-openapi",
- "kube-core",
+ "k8s-openapi 0.13.1",
+ "kube-core 0.64.0",
  "openssl",
  "pem 1.0.2",
  "pin-project",
@@ -2344,7 +2365,40 @@ dependencies = [
  "tokio-native-tls",
  "tokio-util",
  "tower",
- "tower-http",
+ "tower-http 0.1.3",
+ "tracing",
+]
+
+[[package]]
+name = "kube-client"
+version = "0.68.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cced1a3e738c2a4bccb52d33066632369c668f366a71c9c58139d9360e1a341d"
+dependencies = [
+ "base64 0.13.0",
+ "bytes",
+ "chrono",
+ "dirs-next",
+ "either",
+ "futures",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-timeout",
+ "jsonpath_lib",
+ "k8s-openapi 0.14.0",
+ "kube-core 0.68.0",
+ "pem 1.0.2",
+ "pin-project",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tower",
+ "tower-http 0.2.2",
  "tracing",
 ]
 
@@ -2357,8 +2411,24 @@ dependencies = [
  "chrono",
  "form_urlencoded",
  "http",
+ "k8s-openapi 0.13.1",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "kube-core"
+version = "0.68.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6878656f5e349ef08b0a48d2b1841f1e68c4cf1ef42524feadad2f9a109dd888"
+dependencies = [
+ "chrono",
+ "form_urlencoded",
+ "http",
  "json-patch",
- "k8s-openapi",
+ "k8s-openapi 0.14.0",
  "once_cell",
  "serde",
  "serde_json",
@@ -2380,16 +2450,18 @@ dependencies = [
 
 [[package]]
 name = "kube-runtime"
-version = "0.64.0"
+version = "0.68.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b090d3d7b43e2d60fa93ca51b19fe9f2e05a5252c97880fe834f8fa9f2de605"
+checksum = "0990fe3ab89a1217e6a4d4952e1ab0a24783265ed413228efbc489a00f86b3da"
 dependencies = [
- "dashmap",
+ "ahash",
+ "backoff",
  "derivative",
  "futures",
  "json-patch",
- "k8s-openapi",
- "kube-client",
+ "k8s-openapi 0.14.0",
+ "kube-client 0.68.0",
+ "parking_lot 0.11.2",
  "pin-project",
  "serde",
  "serde_json",
@@ -4410,6 +4482,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "secrecy"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bd1c54ea06cfd2f6b63219704de0b9b4f72dcc2b8fdef820be6cd799780e91e"
+dependencies = [
+ "serde",
+ "zeroize",
+]
+
+[[package]]
 name = "security-framework"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5368,6 +5450,26 @@ dependencies = [
  "http",
  "http-body",
  "pin-project",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "tower-http"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33ed53e1fd082268841975cb39587fa9fca9a7a30da84f97818ef667c97f2872"
+dependencies = [
+ "base64 0.13.0",
+ "bitflags",
+ "bytes",
+ "futures-core",
+ "futures-util",
+ "http",
+ "http-body",
+ "http-range-header",
+ "pin-project-lite",
  "tower-layer",
  "tower-service",
  "tracing",
