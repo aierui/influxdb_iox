@@ -64,14 +64,38 @@ pub fn arrow_sort_key_exprs(
     sort_exprs
 }
 
-// Build a datafusion physical expression from its logical one
+/// Build a datafusion physical expression from its logical one
 pub fn df_physical_expr(
     input: &dyn ExecutionPlan,
     expr: Expr,
 ) -> std::result::Result<Arc<dyn PhysicalExpr>, DataFusionError> {
+    df_physical_expr_from_schema_and_expr(input.schema(), expr)
+
+    // let execution_props = ExecutionProps::new();
+
+    // let input_physical_schema = input.schema();
+    // let input_logical_schema: DFSchema = input_physical_schema.as_ref().clone().try_into()?;
+
+    // trace!(%expr, "logical expression");
+    // trace!(%input_logical_schema, "input logical schema");
+    // trace!(%input_physical_schema, "input physical schema");
+
+    // create_physical_expr(
+    //     &expr,
+    //     &input_logical_schema,
+    //     &input_physical_schema,
+    //     &execution_props,
+    // )
+}
+
+/// Build a datafusion physical expression from its logical one
+pub fn df_physical_expr_from_schema_and_expr(
+    schema: Arc<ArrowSchema>,
+    expr: Expr,
+) -> std::result::Result<Arc<dyn PhysicalExpr>, DataFusionError> {
     let execution_props = ExecutionProps::new();
 
-    let input_physical_schema = input.schema();
+    let input_physical_schema = schema;
     let input_logical_schema: DFSchema = input_physical_schema.as_ref().clone().try_into()?;
 
     trace!(%expr, "logical expression");

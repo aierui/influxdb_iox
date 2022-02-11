@@ -1761,7 +1761,8 @@ fn make_selector_expr<'a>(
 /// and measurements can have different subsets of the columns, only
 /// parts of the predicate make sense.
 /// See comments on 'is_null_column'
-struct MissingColumnsToNull<'a> {
+#[derive(Debug)]
+pub struct MissingColumnsToNull<'a> {
     schema: &'a Schema,
     df_schema: DFSchema,
 }
