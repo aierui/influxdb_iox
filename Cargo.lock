@@ -2157,7 +2157,7 @@ dependencies = [
  "dotenv",
  "futures",
  "glob",
- "k8s-openapi",
+ "k8s-openapi 0.14.0",
  "kube",
  "kube-derive",
  "kube-runtime",
@@ -2296,6 +2296,20 @@ dependencies = [
  "base64 0.13.0",
  "bytes",
  "chrono",
+ "serde",
+ "serde-value",
+ "serde_json",
+]
+
+[[package]]
+name = "k8s-openapi"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0489fc937cc7616a9abfa61bf39c250d7e32e1325ef028c8d9278dd24ea395b3"
+dependencies = [
+ "base64 0.13.0",
+ "bytes",
+ "chrono",
  "schemars",
  "serde",
  "serde-value",
@@ -2308,7 +2322,7 @@ version = "0.64.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84dcc2f8ca3f2427a72acc31fa9538159f6b33a97002e315a3fcd5323cf51a2b"
 dependencies = [
- "k8s-openapi",
+ "k8s-openapi 0.13.1",
  "kube-client",
  "kube-core",
 ]
@@ -2331,7 +2345,7 @@ dependencies = [
  "hyper-timeout",
  "hyper-tls",
  "jsonpath_lib",
- "k8s-openapi",
+ "k8s-openapi 0.13.1",
  "kube-core",
  "openssl",
  "pem 1.0.2",
@@ -2358,7 +2372,7 @@ dependencies = [
  "form_urlencoded",
  "http",
  "json-patch",
- "k8s-openapi",
+ "k8s-openapi 0.13.1",
  "once_cell",
  "serde",
  "serde_json",
@@ -2388,7 +2402,7 @@ dependencies = [
  "derivative",
  "futures",
  "json-patch",
- "k8s-openapi",
+ "k8s-openapi 0.13.1",
  "kube-client",
  "pin-project",
  "serde",
