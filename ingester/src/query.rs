@@ -36,7 +36,7 @@ use crate::data::{QueryableBatch, SnapshotBatch};
 #[derive(Debug, Snafu)]
 #[allow(missing_copy_implementations, missing_docs)]
 pub enum Error {
-    #[snafu(display("Internal error concating record batches {}", source))]
+    #[snafu(display("Internal error concatenating record batches {}", source))]
     ConcatBatches { source: arrow::error::ArrowError },
 
     #[snafu(display("Internal error filtering columns from a record batch {}", source))]
@@ -584,9 +584,7 @@ mod tests {
         let expr = col("foo").is_null().and(col("tag1").eq(lit("CT")));
         let pred = PredicateBuilder::default().add_expr(expr).build();
 
-        let stream = batch
-            .read_filter(&pred, selection) // return 2 out of 4 columns
-            .unwrap();
+        let stream = batch.read_filter(&pred, selection).unwrap();
         let batches = datafusion::physical_plan::common::collect(stream)
             .await
             .unwrap();
