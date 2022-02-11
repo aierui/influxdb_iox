@@ -161,7 +161,7 @@ fn from_proto_expr(proto: proto::LogicalExprNode) -> Result<Expr, FieldViolation
 
                     Ok(Expr::WindowFunction {
                         fun: window_functions::WindowFunction::AggregateFunction(
-                            from_proto_aggr_function(aggr_function),
+                            from_proto_aggr_function(aggr_function)?,
                         ),
                         args: vec![from_proto_expr(*expr.expr.unwrap_field("expr")?)?],
                         partition_by,
@@ -176,6 +176,9 @@ fn from_proto_expr(proto: proto::LogicalExprNode) -> Result<Expr, FieldViolation
                     let built_in = proto::BuiltInWindowFunction::from_i32(i)
                         .unwrap_field("built_in_window_function")?;
                     let built_in_function = match built_in {
+                        Unspecified => {
+                            return Err(proto_error("built_in_window_function", "not specified"))
+                        }
                         RowNumber => BuiltInWindowFunction::RowNumber,
                         Rank => BuiltInWindowFunction::Rank,
                         PercentRank => BuiltInWindowFunction::PercentRank,
@@ -208,6 +211,7 @@ fn from_proto_expr(proto: proto::LogicalExprNode) -> Result<Expr, FieldViolation
             let aggr_function = proto::AggregateFunction::from_i32(expr.aggr_function)
                 .unwrap_field("aggr_function")?;
             let fun = match aggr_function {
+                Unspecified => return Err(proto_error("aggr_function", "not specified")),
                 Min => AggregateFunction::Min,
                 Max => AggregateFunction::Max,
                 Sum => AggregateFunction::Sum,
@@ -251,7 +255,7 @@ fn from_proto_expr(proto: proto::LogicalExprNode) -> Result<Expr, FieldViolation
             low: boxed_expr(between.low, "low")?,
             high: boxed_expr(between.high, "high")?,
         }),
-        ExprType::Case(case) => {
+        ExprType::CaseNode(case) => {
             let proto::CaseNode {
                 expr,
                 when_then_expr,
@@ -322,6 +326,9 @@ fn from_proto_expr(proto: proto::LogicalExprNode) -> Result<Expr, FieldViolation
                 .collect::<Result<Vec<_>, _>>()?;
 
             let scalar_function = match scalar_function {
+                proto::ScalarFunction::Unspecified => {
+                    return Err(proto_error("fun", "not specified"))
+                }
                 // unary - must have one argument, otherwise error
                 proto::ScalarFunction::Sqrt => sqrt(args.pop().unwrap_field("arg")?),
                 proto::ScalarFunction::Sin => sin(args.pop().unwrap_field("arg")?),
@@ -428,9 +435,14 @@ fn from_proto_scalar_value(
     Ok(result)
 }
 
-fn from_proto_aggr_function(proto: proto::AggregateFunction) -> aggregates::AggregateFunction {
+fn from_proto_aggr_function(
+    proto: proto::AggregateFunction,
+) -> Result<aggregates::AggregateFunction, FieldViolation> {
     use aggregates::AggregateFunction;
-    match proto {
+    let agg = match proto {
+        proto::AggregateFunction::Unspecified => {
+            return Err(proto_error("aggregate_function", "not specified"))
+        }
         proto::AggregateFunction::Min => AggregateFunction::Min,
         proto::AggregateFunction::Max => AggregateFunction::Max,
         proto::AggregateFunction::Sum => AggregateFunction::Sum,
@@ -447,12 +459,17 @@ fn from_proto_aggr_function(proto: proto::AggregateFunction) -> aggregates::Aggr
         proto::AggregateFunction::Correlation => AggregateFunction::Correlation,
         proto::AggregateFunction::ApproxPercentileCont => AggregateFunction::ApproxPercentileCont,
         proto::AggregateFunction::ApproxMedian => AggregateFunction::ApproxMedian,
-    }
+    };
+
+    Ok(agg)
 }
 
 fn from_proto_window_frame(proto: proto::WindowFrame) -> Result<WindowFrame, FieldViolation> {
     let units = proto.window_frame_units();
     let units = match units {
+        proto::WindowFrameUnits::Unspecified => {
+            return Err(proto_error("window_frame_units", "not specified"))
+        }
         proto::WindowFrameUnits::Rows => WindowFrameUnits::Rows,
         proto::WindowFrameUnits::Range => WindowFrameUnits::Range,
         proto::WindowFrameUnits::Groups => WindowFrameUnits::Groups,
@@ -461,9 +478,8 @@ fn from_proto_window_frame(proto: proto::WindowFrame) -> Result<WindowFrame, Fie
     let start_bound =
         from_proto_window_frame_bound(proto.start_bound.unwrap_field("start_bound")?)?;
 
-    let end_bound: Option<Result<_, FieldViolation>> = proto
-        .end_bound
-        .map(from_proto_window_frame_bound);
+    let end_bound: Option<Result<_, FieldViolation>> =
+        proto.end_bound.map(from_proto_window_frame_bound);
     let end_bound = end_bound
         .transpose()?
         .unwrap_or(WindowFrameBound::CurrentRow);
@@ -481,6 +497,9 @@ fn from_proto_window_frame_bound(
     let bound_type = proto.window_frame_bound_type();
 
     let bound = match bound_type {
+        proto::WindowFrameBoundType::Unspecified => {
+            return Err(proto_error("window_frame_bound_type", "not specified"))
+        }
         proto::WindowFrameBoundType::CurrentRow => WindowFrameBound::CurrentRow,
         proto::WindowFrameBoundType::Preceding => WindowFrameBound::Preceding(proto.bound_value),
         proto::WindowFrameBoundType::Following => WindowFrameBound::Following(proto.bound_value),
@@ -489,23 +508,35 @@ fn from_proto_window_frame_bound(
     Ok(bound)
 }
 
-fn from_proto_interval_unit(proto: proto::IntervalUnit) -> arrow::datatypes::IntervalUnit {
+fn from_proto_interval_unit(
+    proto: proto::IntervalUnit,
+) -> Result<arrow::datatypes::IntervalUnit, FieldViolation> {
     use arrow::datatypes::IntervalUnit;
-    match proto {
+    let iu = match proto {
+        proto::IntervalUnit::Unspecified => {
+            return Err(proto_error("interval_unit", "not specified"))
+        }
         proto::IntervalUnit::YearMonth => IntervalUnit::YearMonth,
         proto::IntervalUnit::DayTime => IntervalUnit::DayTime,
         proto::IntervalUnit::MonthDayNano => IntervalUnit::MonthDayNano,
-    }
+    };
+
+    Ok(iu)
 }
 
-fn from_proto_time_unit(proto: proto::TimeUnit) -> arrow::datatypes::TimeUnit {
+fn from_proto_time_unit(
+    proto: proto::TimeUnit,
+) -> Result<arrow::datatypes::TimeUnit, FieldViolation> {
     use arrow::datatypes::TimeUnit;
-    match proto {
+    let unit = match proto {
+        proto::TimeUnit::Unspecified => return Err(proto_error("time_unit", "not specified")),
         proto::TimeUnit::Second => TimeUnit::Second,
         proto::TimeUnit::TimeMillisecond => TimeUnit::Millisecond,
         proto::TimeUnit::Microsecond => TimeUnit::Microsecond,
         proto::TimeUnit::Nanosecond => TimeUnit::Nanosecond,
-    }
+    };
+
+    Ok(unit)
 }
 
 fn from_proto_arrow_type(
@@ -537,7 +568,7 @@ fn from_proto_arrow_type(
         ArrowTypeEnum::Date64(_) => DataType::Date64,
         ArrowTypeEnum::Duration(time_unit) => {
             let time_unit = proto::TimeUnit::from_i32(time_unit).unwrap_field("time_unit")?;
-            DataType::Duration(from_proto_time_unit(time_unit))
+            DataType::Duration(from_proto_time_unit(time_unit)?)
         }
         ArrowTypeEnum::Timestamp(proto::Timestamp {
             time_unit,
@@ -545,7 +576,7 @@ fn from_proto_arrow_type(
         }) => {
             let time_unit = proto::TimeUnit::from_i32(time_unit).unwrap_field("time_unit")?;
             DataType::Timestamp(
-                from_proto_time_unit(time_unit),
+                from_proto_time_unit(time_unit)?,
                 match timezone.len() {
                     0 => None,
                     _ => Some(timezone),
@@ -554,16 +585,16 @@ fn from_proto_arrow_type(
         }
         ArrowTypeEnum::Time32(time_unit) => {
             let time_unit = proto::TimeUnit::from_i32(time_unit).unwrap_field("time_unit")?;
-            DataType::Time32(from_proto_time_unit(time_unit))
+            DataType::Time32(from_proto_time_unit(time_unit)?)
         }
         ArrowTypeEnum::Time64(time_unit) => {
             let time_unit = proto::TimeUnit::from_i32(time_unit).unwrap_field("time_unit")?;
-            DataType::Time64(from_proto_time_unit(time_unit))
+            DataType::Time64(from_proto_time_unit(time_unit)?)
         }
         ArrowTypeEnum::Interval(interval_unit) => {
             let interval_unit =
                 proto::IntervalUnit::from_i32(interval_unit).unwrap_field("interval_unit")?;
-            DataType::Interval(from_proto_interval_unit(interval_unit))
+            DataType::Interval(from_proto_interval_unit(interval_unit)?)
         }
         ArrowTypeEnum::Decimal(proto::Decimal { whole, fractional }) => {
             DataType::Decimal(whole as usize, fractional as usize)
@@ -591,6 +622,9 @@ fn from_proto_arrow_type(
             let union_mode =
                 proto::UnionMode::from_i32(union.union_mode).unwrap_field("union_mode")?;
             let union_mode = match union_mode {
+                proto::UnionMode::Unspecified => {
+                    return Err(proto_error("union_mode", "not specified"))
+                }
                 proto::UnionMode::Dense => UnionMode::Dense,
                 proto::UnionMode::Sparse => UnionMode::Sparse,
             };
