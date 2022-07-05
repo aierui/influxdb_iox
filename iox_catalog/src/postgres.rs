@@ -1621,7 +1621,11 @@ RETURNING *;
         .map_err(|e| Error::SqlxError { source: e })
     }
 
-    async fn level_0(&mut self, sequencer_id: SequencerId, compaction_level0_candidate_file_count: i64) -> Result<Vec<ParquetFile>> {
+    async fn level_0(
+        &mut self,
+        sequencer_id: SequencerId,
+        compaction_level0_candidate_file_count: i64,
+    ) -> Result<Vec<ParquetFile>> {
         // this intentionally limits the returned files to 10,000 as it is used to make
         // a decision on the highest priority partitions. If compaction has never been
         // run this could end up returning millions of results and taking too long to run.

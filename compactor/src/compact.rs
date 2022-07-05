@@ -271,7 +271,11 @@ impl Compactor {
         }
     }
 
-    async fn level_0_parquet_files(&self, sequencer_id: SequencerId, compaction_level0_candidate_file_count: i64) -> Result<Vec<ParquetFile>> {
+    async fn level_0_parquet_files(
+        &self,
+        sequencer_id: SequencerId,
+        compaction_level0_candidate_file_count: i64,
+    ) -> Result<Vec<ParquetFile>> {
         let mut repos = self.catalog.repositories().await;
 
         repos
@@ -307,12 +311,17 @@ impl Compactor {
     /// Returns a list of partitions that have level 0 files to compact along with some summary
     /// statistics that the scheduler can use to decide which partitions to prioritize. Orders
     /// them by the number of level 0 files and then size.
-    pub async fn partitions_to_compact(&self, compaction_level0_candidate_file_count: i64) -> Result<Vec<PartitionCompactionCandidate>> {
+    pub async fn partitions_to_compact(
+        &self,
+        compaction_level0_candidate_file_count: i64,
+    ) -> Result<Vec<PartitionCompactionCandidate>> {
         let mut candidates = vec![];
 
         for sequencer_id in &self.sequencers {
             // Read level-0 parquet files
-            let level_0_files = self.level_0_parquet_files(*sequencer_id, compaction_level0_candidate_file_count).await?;
+            let level_0_files = self
+                .level_0_parquet_files(*sequencer_id, compaction_level0_candidate_file_count)
+                .await?;
 
             let mut partitions = BTreeMap::new();
             for f in level_0_files {
@@ -3951,7 +3960,10 @@ mod tests {
             Arc::new(metric::Registry::new()),
         );
 
-        let candidates = compactor.partitions_to_compact(compaction_level0_candidate_file_count).await.unwrap();
+        let candidates = compactor
+            .partitions_to_compact(compaction_level0_candidate_file_count)
+            .await
+            .unwrap();
         let expect: Vec<PartitionCompactionCandidate> = vec![
             PartitionCompactionCandidate {
                 sequencer_id: sequencer.id,

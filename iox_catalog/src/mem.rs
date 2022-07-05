@@ -1064,7 +1064,11 @@ impl ParquetFileRepo for MemTxn {
         Ok(delete)
     }
 
-    async fn level_0(&mut self, sequencer_id: SequencerId, _compaction_level0_candidate_file_count: i64) -> Result<Vec<ParquetFile>> {
+    async fn level_0(
+        &mut self,
+        sequencer_id: SequencerId,
+        _compaction_level0_candidate_file_count: i64,
+    ) -> Result<Vec<ParquetFile>> {
         let stage = self.stage();
 
         Ok(stage

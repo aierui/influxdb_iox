@@ -185,10 +185,13 @@ impl CompactorConfig {
 /// next top partitions to compact.
 async fn run_compactor(compactor: Arc<Compactor>, shutdown: CancellationToken) {
     while !shutdown.is_cancelled() {
-        let compaction_level0_candidate_file_count = compactor.config.compaction_level0_candidate_file_count();
+        let compaction_level0_candidate_file_count =
+            compactor.config.compaction_level0_candidate_file_count();
         let candidates = Backoff::new(&compactor.backoff_config)
             .retry_all_errors("partitions_to_compact", || async {
-                compactor.partitions_to_compact(compaction_level0_candidate_file_count).await
+                compactor
+                    .partitions_to_compact(compaction_level0_candidate_file_count)
+                    .await
             })
             .await
             .expect("retry forever");
