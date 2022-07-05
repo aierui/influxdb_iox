@@ -271,12 +271,12 @@ impl Compactor {
         }
     }
 
-    async fn level_0_parquet_files(&self, sequencer_id: SequencerId) -> Result<Vec<ParquetFile>> {
+    async fn level_0_parquet_files(&self, sequencer_id: SequencerId, compaction_level0_candidate_file_count: i64) -> Result<Vec<ParquetFile>> {
         let mut repos = self.catalog.repositories().await;
 
         repos
             .parquet_files()
-            .level_0(sequencer_id)
+            .level_0(sequencer_id, compaction_level0_candidate_file_count)
             .await
             .context(Level0Snafu)
     }
@@ -307,12 +307,12 @@ impl Compactor {
     /// Returns a list of partitions that have level 0 files to compact along with some summary
     /// statistics that the scheduler can use to decide which partitions to prioritize. Orders
     /// them by the number of level 0 files and then size.
-    pub async fn partitions_to_compact(&self) -> Result<Vec<PartitionCompactionCandidate>> {
+    pub async fn partitions_to_compact(&self, compaction_level0_candidate_file_count: i64) -> Result<Vec<PartitionCompactionCandidate>> {
         let mut candidates = vec![];
 
         for sequencer_id in &self.sequencers {
             // Read level-0 parquet files
-            let level_0_files = self.level_0_parquet_files(*sequencer_id).await?;
+            let level_0_files = self.level_0_parquet_files(*sequencer_id, compaction_level0_candidate_file_count).await?;
 
             let mut partitions = BTreeMap::new();
             for f in level_0_files {
@@ -1508,6 +1508,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -1521,6 +1522,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
@@ -1664,6 +1666,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -1677,6 +1680,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
@@ -1879,6 +1883,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -1892,6 +1897,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
@@ -2129,6 +2135,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -2142,6 +2149,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
@@ -2283,6 +2291,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -2296,6 +2305,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
@@ -3368,6 +3378,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![],
             Arc::clone(&catalog.catalog),
@@ -3381,6 +3392,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
@@ -3580,6 +3592,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![],
             Arc::clone(&catalog.catalog),
@@ -3593,6 +3606,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
@@ -3918,6 +3932,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -3931,11 +3946,12 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
 
-        let candidates = compactor.partitions_to_compact().await.unwrap();
+        let candidates = compactor.partitions_to_compact(compaction_level0_candidate_file_count).await.unwrap();
         let expect: Vec<PartitionCompactionCandidate> = vec![
             PartitionCompactionCandidate {
                 sequencer_id: sequencer.id,
@@ -4011,6 +4027,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -4024,6 +4041,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );

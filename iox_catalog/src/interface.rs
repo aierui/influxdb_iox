@@ -531,7 +531,7 @@ pub trait ParquetFileRepo: Send + Sync {
 
     /// List parquet files for a given sequencer with compaction level 0 and other criteria that
     /// define a file as a candidate for compaction
-    async fn level_0(&mut self, sequencer_id: SequencerId) -> Result<Vec<ParquetFile>>;
+    async fn level_0(&mut self, sequencer_id: SequencerId, compaction_level0_candidate_file_count: i64) -> Result<Vec<ParquetFile>>;
 
     /// List parquet files for a given table partition, in a given time range, with compaction
     /// level 2, and other criteria that define a file as a candidate for compaction with a level 0
@@ -2314,7 +2314,7 @@ pub(crate) mod test_helpers {
 
         // Level 0 parquet files for a sequencer should contain only those that match the right
         // criteria
-        let level_0 = repos.parquet_files().level_0(sequencer.id).await.unwrap();
+        let level_0 = repos.parquet_files().level_0(sequencer.id, 1000).await.unwrap();
         let mut level_0_ids: Vec<_> = level_0.iter().map(|pf| pf.id).collect();
         level_0_ids.sort();
         let expected = vec![parquet_file];
@@ -2724,7 +2724,7 @@ pub(crate) mod test_helpers {
 
         // Level 0 parquet files should contain both existing files at this point
         let expected = vec![parquet_file.clone(), level_0_file.clone()];
-        let level_0 = repos.parquet_files().level_0(sequencer.id).await.unwrap();
+        let level_0 = repos.parquet_files().level_0(sequencer.id, 1000).await.unwrap();
         let mut level_0_ids: Vec<_> = level_0.iter().map(|pf| pf.id).collect();
         level_0_ids.sort();
         let mut expected_ids: Vec<_> = expected.iter().map(|pf| pf.id).collect();
@@ -2746,7 +2746,7 @@ pub(crate) mod test_helpers {
 
         // Level 0 parquet files should only contain level_0_file
         let expected = vec![level_0_file];
-        let level_0 = repos.parquet_files().level_0(sequencer.id).await.unwrap();
+        let level_0 = repos.parquet_files().level_0(sequencer.id, 1000).await.unwrap();
         let mut level_0_ids: Vec<_> = level_0.iter().map(|pf| pf.id).collect();
         level_0_ids.sort();
         let mut expected_ids: Vec<_> = expected.iter().map(|pf| pf.id).collect();

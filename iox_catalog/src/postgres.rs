@@ -1621,7 +1621,7 @@ RETURNING *;
         .map_err(|e| Error::SqlxError { source: e })
     }
 
-    async fn level_0(&mut self, sequencer_id: SequencerId) -> Result<Vec<ParquetFile>> {
+    async fn level_0(&mut self, sequencer_id: SequencerId, compaction_level0_candidate_file_count: i64) -> Result<Vec<ParquetFile>> {
         // this intentionally limits the returned files to 10,000 as it is used to make
         // a decision on the highest priority partitions. If compaction has never been
         // run this could end up returning millions of results and taking too long to run.
@@ -1636,10 +1636,11 @@ FROM parquet_file
 WHERE parquet_file.sequencer_id = $1
   AND parquet_file.compaction_level = 0
   AND parquet_file.to_delete IS NULL
-  LIMIT 1000;
+  LIMIT $2;
         "#,
         )
         .bind(&sequencer_id) // $1
+        .bind(&compaction_level0_candidate_file_count) // $2
         .fetch_all(&mut self.inner)
         .await
         .map_err(|e| Error::SqlxError { source: e })

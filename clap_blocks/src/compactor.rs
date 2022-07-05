@@ -80,4 +80,14 @@ pub struct CompactorConfig {
         action
     )]
     pub compaction_max_desired_file_size_bytes: i64,
+
+    /// Limit the number of chose partition candidates level-0 parquet files
+    /// Default is 1000 (Only supported Postgres)
+    #[clap(
+        long = "--compaction-level0-candidate-file-count",
+        env = "INFLUXDB_IOX_COMPACTION_LEVEL0_CANDIDATE_FILE_COUNT",
+        default_value = "1000",
+        action
+    )]
+    pub compaction_level0_candidate_file_count: i64,
 }

@@ -179,7 +179,7 @@ impl TestCatalog {
             .repositories()
             .await
             .parquet_files()
-            .level_0(sequencer_id)
+            .level_0(sequencer_id, 1000)
             .await
             .unwrap()
     }
@@ -191,7 +191,7 @@ impl TestCatalog {
             .repositories()
             .await
             .parquet_files()
-            .level_0(sequencer_id)
+            .level_0(sequencer_id, 1000)
             .await
             .unwrap();
         level_0.len()

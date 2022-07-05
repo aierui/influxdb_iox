@@ -117,6 +117,8 @@ pub struct CompactorConfig {
     /// If the compacted result is larger than this value, it will be persisted into
     /// many files, each is estimated smaller than this value
     compaction_max_desired_file_size_bytes: i64,
+    /// Limit the number of chose partition candidates level-0 parquet files
+    compaction_level0_candidate_file_count: i64,
 }
 
 impl CompactorConfig {
@@ -127,6 +129,7 @@ impl CompactorConfig {
         compaction_max_size_bytes: i64,
         compaction_max_file_count: i64,
         compaction_max_desired_file_size_bytes: i64,
+        compaction_level0_candidate_file_count: i64,
     ) -> Self {
         assert!(split_percentage > 0 && split_percentage <= 100);
 
@@ -136,6 +139,7 @@ impl CompactorConfig {
             compaction_max_size_bytes,
             compaction_max_file_count,
             compaction_max_desired_file_size_bytes,
+            compaction_level0_candidate_file_count,
         }
     }
 
@@ -169,6 +173,11 @@ impl CompactorConfig {
     pub fn compaction_max_desired_file_size_bytes(&self) -> i64 {
         self.compaction_max_desired_file_size_bytes
     }
+
+    /// Limit the number of chose partition candidates level-0 parquet files
+    pub fn compaction_level0_candidate_file_count(&self) -> i64 {
+        self.compaction_level0_candidate_file_count
+    }
 }
 
 /// Checks for candidate partitions to compact and spawns tokio tasks to compact as many
@@ -176,9 +185,10 @@ impl CompactorConfig {
 /// next top partitions to compact.
 async fn run_compactor(compactor: Arc<Compactor>, shutdown: CancellationToken) {
     while !shutdown.is_cancelled() {
+        let compaction_level0_candidate_file_count = compactor.config.compaction_level0_candidate_file_count();
         let candidates = Backoff::new(&compactor.backoff_config)
             .retry_all_errors("partitions_to_compact", || async {
-                compactor.partitions_to_compact().await
+                compactor.partitions_to_compact(compaction_level0_candidate_file_count).await
             })
             .await
             .expect("retry forever");
