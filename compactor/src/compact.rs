@@ -2027,6 +2027,7 @@ mod tests {
         let compaction_max_size_bytes = 100000;
         let compaction_max_file_count = 10;
         let compaction_max_desired_file_size_bytes = 30000;
+        let compaction_level0_candidate_file_count = 1000;
         let compactor = Compactor::new(
             vec![sequencer.sequencer.id],
             Arc::clone(&catalog.catalog),
@@ -2041,6 +2042,7 @@ mod tests {
                 compaction_max_size_bytes,
                 compaction_max_file_count,
                 compaction_max_desired_file_size_bytes,
+                compaction_level0_candidate_file_count,
             ),
             Arc::new(metric::Registry::new()),
         );
