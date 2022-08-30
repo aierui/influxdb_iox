@@ -7,7 +7,7 @@ use futures::StreamExt;
 use hashbrown::HashMap;
 use hyper::{header::CONTENT_ENCODING, Body, Method, Request, Response, StatusCode};
 use iox_time::{SystemProvider, TimeProvider};
-use metric::{U64Counter, DurationHistogram};
+use metric::{U64Counter, DurationHistogram, Metric, Attributes};
 use mutable_batch::MutableBatch;
 use mutable_batch_lp::LinesConverter;
 use observability_deps::tracing::*;
@@ -222,7 +222,7 @@ pub struct HttpDelegate<D, T = SystemProvider> {
     request_sem: Semaphore,
 
     write_metric_lines: U64Counter,
-    http_write_lines_duration: DurationHistogram,
+    http_write_lines_duration: Metric<DurationHistogram>,
     write_metric_fields: U64Counter,
     write_metric_tables: U64Counter,
     write_metric_body_size: U64Counter,
@@ -282,8 +282,7 @@ impl<D> HttpDelegate<D, SystemProvider> {
             .register_metric::<DurationHistogram>(
                 "http_write_lines_duration",
                 "write latency of line protocol lines",
-            )
-            .recorder(&[]);
+            );
 
         Self {
             max_request_bytes,
@@ -372,7 +371,10 @@ where
 
         let num_tables = batches.len();
         let duration = start_instant.elapsed();
-        self.http_write_lines_duration.record(duration);
+        let attributes = Attributes::from([
+            ("namespace", format!("{}", namespace).into()),
+        ]);
+        self.http_write_lines_duration.recorder(attributes).record(duration);
         debug!(
             num_lines=stats.num_lines,
             num_fields=stats.num_fields,
