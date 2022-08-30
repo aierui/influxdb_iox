@@ -7,14 +7,14 @@ use futures::StreamExt;
 use hashbrown::HashMap;
 use hyper::{header::CONTENT_ENCODING, Body, Method, Request, Response, StatusCode};
 use iox_time::{SystemProvider, TimeProvider};
-use metric::{U64Counter, DurationHistogram, Metric, Attributes};
+use metric::{Attributes, DurationHistogram, Metric, U64Counter};
 use mutable_batch::MutableBatch;
 use mutable_batch_lp::LinesConverter;
 use observability_deps::tracing::*;
 use predicate::delete_predicate::{parse_delete_predicate, parse_http_delete_request};
 use serde::Deserialize;
-use std::{str::Utf8Error, sync::Arc};
 use std::time::Instant;
+use std::{str::Utf8Error, sync::Arc};
 use thiserror::Error;
 use tokio::sync::{Semaphore, TryAcquireError};
 use trace::ctx::SpanContext;
@@ -278,11 +278,10 @@ impl<D> HttpDelegate<D, SystemProvider> {
                 "number of HTTP requests rejected due to exceeding parallel request limit",
             )
             .recorder(&[]);
-        let http_write_lines_duration = metrics
-            .register_metric::<DurationHistogram>(
-                "http_write_lines_duration",
-                "write latency of line protocol lines",
-            );
+        let http_write_lines_duration = metrics.register_metric::<DurationHistogram>(
+            "http_write_lines_duration",
+            "write latency of line protocol lines",
+        );
 
         Self {
             max_request_bytes,
@@ -371,10 +370,10 @@ where
 
         let num_tables = batches.len();
         let duration = start_instant.elapsed();
-        let attributes = Attributes::from([
-            ("namespace", format!("{}", namespace).into()),
-        ]);
-        self.http_write_lines_duration.recorder(attributes).record(duration);
+        let attributes = Attributes::from([("namespace", format!("{}", namespace).into())]);
+        self.http_write_lines_duration
+            .recorder(attributes)
+            .record(duration);
         debug!(
             num_lines=stats.num_lines,
             num_fields=stats.num_fields,
