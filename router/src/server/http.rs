@@ -7,7 +7,7 @@ use futures::StreamExt;
 use hashbrown::HashMap;
 use hyper::{header::CONTENT_ENCODING, Body, Method, Request, Response, StatusCode};
 use iox_time::{SystemProvider, TimeProvider};
-use metric::{Attributes, DurationHistogram, Metric, U64Counter};
+use metric::{DurationHistogram, U64Counter};
 use mutable_batch::MutableBatch;
 use mutable_batch_lp::LinesConverter;
 use observability_deps::tracing::*;
@@ -222,7 +222,7 @@ pub struct HttpDelegate<D, T = SystemProvider> {
     request_sem: Semaphore,
 
     write_metric_lines: U64Counter,
-    http_write_lines_duration: Metric<DurationHistogram>,
+    http_line_protocol_parse_duration: DurationHistogram,
     write_metric_fields: U64Counter,
     write_metric_tables: U64Counter,
     write_metric_body_size: U64Counter,
@@ -278,10 +278,12 @@ impl<D> HttpDelegate<D, SystemProvider> {
                 "number of HTTP requests rejected due to exceeding parallel request limit",
             )
             .recorder(&[]);
-        let http_write_lines_duration = metrics.register_metric::<DurationHistogram>(
-            "http_write_lines_duration",
-            "write latency of line protocol lines",
-        );
+        let http_line_protocol_parse_duration = metrics
+            .register_metric::<DurationHistogram>(
+                "http_line_protocol_parse_duration",
+                "write latency of line protocol parsing",
+            )
+            .recorder(&[]);
 
         Self {
             max_request_bytes,
@@ -289,7 +291,7 @@ impl<D> HttpDelegate<D, SystemProvider> {
             dml_handler,
             request_sem: Semaphore::new(max_requests),
             write_metric_lines,
-            http_write_lines_duration,
+            http_line_protocol_parse_duration,
             write_metric_fields,
             write_metric_tables,
             write_metric_body_size,
@@ -370,10 +372,7 @@ where
 
         let num_tables = batches.len();
         let duration = start_instant.elapsed();
-        let attributes = Attributes::from([("namespace", format!("{}", namespace).into())]);
-        self.http_write_lines_duration
-            .recorder(attributes)
-            .record(duration);
+        self.http_line_protocol_parse_duration.record(duration);
         debug!(
             num_lines=stats.num_lines,
             num_fields=stats.num_fields,
