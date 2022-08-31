@@ -407,6 +407,7 @@ impl Config {
             skip_to_oldest_available,
             test_flight_do_get_panic: 0,
             concurrent_request_limit: 10,
+            persist_partition_rows_max: 500_000,
         };
 
         // create a CompactorConfig for the all in one server based on
@@ -419,15 +420,13 @@ impl Config {
             max_desired_file_size_bytes: 30_000,
             percentage_max_file_size: 30,
             split_percentage: 80,
-            max_concurrent_size_bytes: 100_000,
             max_cold_concurrent_size_bytes: 90_000,
             max_number_partitions_per_shard: 1,
             min_number_recent_ingested_files_per_partition: 1,
-            input_size_threshold_bytes: 314_572_800,
             cold_input_size_threshold_bytes: 629_145_600,
-            input_file_count_threshold: 100,
             cold_input_file_count_threshold: 100,
             hot_multiple: 4,
+            memory_budget_bytes: 300_000,
         };
 
         let querier_config = QuerierConfig {

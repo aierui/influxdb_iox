@@ -946,7 +946,7 @@ impl MockIngester {
             ParquetStorage::new(catalog.object_store()),
             catalog.metric_registry(),
             ns.namespace.name.clone().into(),
-            schema,
+            Arc::new(schema.as_ref().into()),
             catalog.exec(),
             Some(ingester_connection),
             sharder,
@@ -968,6 +968,7 @@ impl LifecycleHandle for NoopLifecycleHandle {
         _shard_id: ShardId,
         _sequence_number: SequenceNumber,
         _bytes_written: usize,
+        _rows_written: usize,
     ) -> bool {
         // do NOT pause ingest
         false

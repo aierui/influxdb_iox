@@ -100,7 +100,7 @@ impl ProjectedSchemaCache {
         ));
 
         // add to memory pool
-        let mut backend = PolicyBackend::new(Box::new(HashMap::new()));
+        let mut backend = PolicyBackend::new(Box::new(HashMap::new()), Arc::clone(&time_provider));
         backend.add_policy(LruPolicy::new(
             Arc::clone(&ram_pool),
             CACHE_ID,
@@ -109,7 +109,7 @@ impl ProjectedSchemaCache {
             })),
         ));
 
-        let cache = Box::new(CacheDriver::new(loader, Box::new(backend)));
+        let cache = Box::new(CacheDriver::new(loader, backend));
         let cache = Box::new(CacheWithMetrics::new(
             cache,
             CACHE_ID,
