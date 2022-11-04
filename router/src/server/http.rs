@@ -667,12 +667,12 @@ mod tests {
                     if let Ok(v) = got {
                         assert_eq!(v.status(), StatusCode::NO_CONTENT);
                         if $uri.contains("/api/v2/write") {
-                            assert_metric_hit(&metrics, "http_write_lines_total", None);
-                            assert_metric_hit(&metrics, "http_write_fields_total", None);
-                            assert_metric_hit(&metrics, "http_write_tables_total", None);
-                            assert_metric_hit(&metrics, "http_write_body_bytes_total", Some($body.len() as _));
+                            assert_metric_hit(&metrics, "http_write_lines", None);
+                            assert_metric_hit(&metrics, "http_write_fields", None);
+                            assert_metric_hit(&metrics, "http_write_tables", None);
+                            assert_metric_hit(&metrics, "http_write_body_bytes", Some($body.len() as _));
                         } else {
-                            assert_metric_hit(&metrics, "http_delete_body_bytes_total", Some($body.len() as _));
+                            assert_metric_hit(&metrics, "http_delete_body_bytes", Some($body.len() as _));
                         }
                     }
 
