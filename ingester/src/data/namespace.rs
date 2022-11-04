@@ -151,7 +151,7 @@ impl NamespaceData {
     ) -> Self {
         let table_count = metrics
             .register_metric::<U64Counter>(
-                "ingester_tables_total",
+                "ingester_tables",
                 "Number of tables known to the ingester",
             )
             .recorder(&[]);
