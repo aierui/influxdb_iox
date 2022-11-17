@@ -201,9 +201,9 @@ async fn slurp_file(file_name: PathBuf) -> Result<String> {
                 let lines = io::stdin().lines();
                 for line in lines {
                     buffer.push_str(line.unwrap().as_str());
-                    buffer.push_str("\n");
+                    buffer.push('\n');
                 }
-                buffer = buffer.to_owned().strip_suffix("\n").unwrap().to_string();
+                buffer = buffer.to_owned().strip_suffix('\n').unwrap().to_string();
 
                 info!(
                     ?file_name,
