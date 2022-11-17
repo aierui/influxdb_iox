@@ -4,6 +4,7 @@ use observability_deps::tracing::info;
 use snafu::{ensure, OptionExt, ResultExt, Snafu};
 use std::{
     fs::File,
+    io,
     io::{BufReader, Read},
     num::NonZeroUsize,
     path::PathBuf,
@@ -91,6 +92,7 @@ pub async fn command(connection: Connection, config: Config) -> Result<()> {
     // opened and if not fail fast.
     let file_open_errors: Vec<_> = file_names
         .iter()
+        .filter(|file_name| file_name != &&PathBuf::from("-"))
         .filter_map(|file_name| {
             File::open(file_name)
                 .context(ReadingFileSnafu { file_name })
@@ -194,6 +196,24 @@ async fn slurp_file(file_name: PathBuf) -> Result<String> {
         }
         // anything else, treat as line protocol
         Some(_) | None => {
+            if file_name == &PathBuf::from("-") {
+                let mut buffer = String::new();
+                let lines = io::stdin().lines();
+                for line in lines {
+                    buffer.push_str(line.unwrap().as_str());
+                    buffer.push_str("\n");
+                }
+                buffer = buffer.to_owned().strip_suffix("\n").unwrap().to_string();
+
+                info!(
+                    ?file_name,
+                    file_size_bytes = buffer.len(),
+                    "Buffered line protocol from stdin"
+                );
+
+                return Ok(buffer);
+            }
+
             let lp_data =
                 std::fs::read_to_string(file_name).context(ReadingFileSnafu { file_name })?;
 
