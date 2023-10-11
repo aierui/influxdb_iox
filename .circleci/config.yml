@@ -214,7 +214,7 @@ jobs:
           - "postgres"
           - "-c"
           - "max_connections=200"
-    resource_class: xlarge # use of a smaller executor tends crashes on link
+    resource_class: large # use of a smaller executor tends crashes on link
     environment:
       # Disable incremental compilation to avoid overhead. We are not preserving these files anyway.
       CARGO_INCREMENTAL: "0"
@@ -254,7 +254,7 @@ jobs:
   test:
     docker:
       - image: quay.io/influxdb/rust:ci
-    resource_class: 2xlarge+ # use of a smaller executor tends crashes on link
+    resource_class: large # use of a smaller executor tends crashes on link
     environment:
       # Disable incremental compilation to avoid overhead. We are not preserving these files anyway.
       CARGO_INCREMENTAL: "0"
@@ -271,12 +271,11 @@ jobs:
           name: cargo test --workspace
           command: cargo test --workspace
 
-
   # end to end tests with Heappy (heap profiling enabled)
   test_heappy:
     docker:
       - image: quay.io/influxdb/rust:ci
-    resource_class: xlarge # use of a smaller executor tends crashes on link
+    resource_class: large # use of a smaller executor tends crashes on link
     environment:
       # Disable incremental compilation to avoid overhead. We are not preserving these files anyway.
       CARGO_INCREMENTAL: "0"
@@ -300,7 +299,7 @@ jobs:
   build_dev:
     docker:
       - image: quay.io/influxdb/rust:ci
-    resource_class: 2xlarge # use of a smaller executor tends crashes on link
+    resource_class: large # use of a smaller executor tends crashes on link
     environment:
       # Disable incremental compilation to avoid overhead. We are not preserving these files anyway.
       CARGO_INCREMENTAL: "0"
@@ -382,7 +381,7 @@ jobs:
     # kinda small node)
     machine:
       image: ubuntu-2004:2022.04.2
-    resource_class: 2xlarge # CPU bound, so make it fast
+    resource_class: large # CPU bound, so make it fast
     steps:
       - checkout
       - run:
@@ -418,8 +417,8 @@ jobs:
     docker:
       - image: quay.io/influxdb/rust:ci
     environment:
-        # See https://github.com/containers/skopeo/issues/942
-        XDG_RUNTIME_DIR: /home/rust/.run
+      # See https://github.com/containers/skopeo/issues/942
+      XDG_RUNTIME_DIR: /home/rust/.run
     steps:
       - checkout
       - attach_workspace:
@@ -482,7 +481,7 @@ jobs:
     machine:
       # https://circleci.com/docs/2.0/configuration-reference/#available-machine-images
       image: ubuntu-2004:2022.04.2
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - run: |
