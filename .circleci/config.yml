@@ -528,22 +528,22 @@ workflows:
           filters:
             branches:
               only: main
-      - deploy_release:
-          filters:
-            branches:
-              only: main
-          requires: # Only deploy if all tests have passed
-            - fmt
-            - lint
-            - cargo_audit
-            - protobuf-lint
-            - docs-lint
-            - test
-            - test_heappy
-            - test_integration
-            - build_dev
-            - build_release
-            - doc
+      # - deploy_release:
+      #     filters:
+      #       branches:
+      #         only: main
+      #     requires: # Only deploy if all tests have passed
+      #       - fmt
+      #       - lint
+      #       - cargo_audit
+      #       - protobuf-lint
+      #       - docs-lint
+      #       - test
+      #       - test_heappy
+      #       - test_integration
+      #       - build_dev
+      #       - build_release
+      #       - doc
 
   # Manual build of CI image
   ci_image:
